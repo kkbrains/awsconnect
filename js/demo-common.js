@@ -1,6 +1,6 @@
 demo = window.demo || {};
 (function() {
-   alias = localStorage.getItem('alias');
+   alias = 'innowiz'//localStorage.getItem('alias');
    if (alias === null || alias === '') {
       window.location="/index.html";
    }
