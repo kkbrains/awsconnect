@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Amazon Connect Demo Site</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta content="utf-8" http-equiv="encoding">
+    <link href="../css/style.css" rel="stylesheet" type="text/css" />
+    <link href="../css/copybutton.css" rel="stylesheet" type="text/css" />
+    <link href="../css/menuStyle.css" rel="stylesheet" type="text/css" />
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script type="text/javascript" src="../js/amazon-connect-v1.1.1.js"></script>
+    <script src="../js/clipboard.min.js"></script>
+    <script src="../js/demo-common.js"></script>
+    <script src="../js/menu.js"></script>
+    <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
+</head>
+
+<body>
+   <!--navbar div with the id-->
+    <div id="navbar-frame"></div>
+   <script>
+      var clipboard = new Clipboard('.btn');
+      clipboard.on('success', function(e) {
+      console.log(e);
+          });
+
+      clipboard.on('error', function(e) {
+      console.log(e);
+          });
+   </script> 
+   <style>
+      #ccpContainer {
+         width:265px;
+         height:465px;
+         overflow:hidden;
+         float:left;
+         margin-left:22px;
+         padding:25px;
+      }
+      #section-main {
+         padding:10px;
+         max-width:600px;
+         height:495px;
+         margin-left:0px;
+         float:left;
+         overflow: hidden;
+      }
+     #attributes_wrapper {
+         font-size: 14px;
+         width: 550px;
+         height: 175px;
+         overflow-y: scroll;
+         overflow-x:hidden;
+      }
+   </style>
+      <section id="ccpContainer">
+         <div id="ccpContainer1">
+            <script>
+               //Connect CCP Integration
+               var container = document.getElementById("ccpContainer");
+               connect.core.initCCP(container, {
+                  ccpUrl: demo.ccpUrl,
+                  softphone: {
+                     allowFramedSoftphone: true,
+                     disableRingtone: false
+                     }
+                  });
+
+               var c; connect.contact(function(contact) {
+               c = contact;
+               c.onConnecting(function(c) {
+               var attr = c.getAttributes();
+               var c1 = c.getConnections()[1];
+               var c2 = c.getStatus();
+                  document.getElementById("contactID").value=c.contactId;
+                  document.getElementById("phoneNumber").value=c1.getAddress()['phoneNumber'];
+                  if (attr.firstName){document.getElementById("firstName").value=attr.firstName.value;}
+                  if (attr.lastName){document.getElementById("lastName").value=attr.lastName.value;} 
+               });
+
+                c.onRefresh((c) => {
+                fillTable(c.getAttributes());
+                   });
+
+                 c.onConnected(() => {
+                   $("#updateName").click(()=> {
+         var url = "https://www.connectdemo.com/php/nameUpdate.php"; // the script where you handle the form input.
+         var $phoneNumber = $('#phoneNumber').val();
+         var $firstName = " "; 
+            if ($('#firstName').val()){
+               $firstName = $('#firstName').val();
+               }
+         var $lastName = " "; 
+            if ($('#lastName').val()){
+               $lastName = $('#lastName').val();
+               }
+            $.ajax({
+            type: "POST",
+            url: url,
+            data:{
+               phoneNumber: $phoneNumber, firstName: $firstName, lastName: $lastName
+           },
+            success: () => {
+             },             
+         });
+      return false; // avoid to execute the actual submit of the form.
+      }); 
+                  }); 
+
+             });
+
+                var table;
+                   $(document).ready((a)=> {
+                      table = $('#attributes').DataTable( {
+                      columns: [
+                         { title: "Name" },
+                         { title: "Value" }
+                        ],
+                      paging: false,
+                      info: false,
+                      searching: false
+                   });
+                   $("#showAttributes").click(()=>{
+                   $('#visibleAttributes').show();
+                   $('#hiddenAttributes').hide();
+                         });
+                   $("#hideAttributes").click(()=>{
+                   $('#visibleAttributes').hide();
+                   $('#hiddenAttributes').show();
+                         });
+
+                    });
+
+                  var fillTable = (attributes) => {
+                     table.clear();
+                        for (var k in attributes) {
+                        var value = attributes[k].value;
+                        if (value.startsWith("http")) {
+                            value = '<a target="_blank" href="' + value + '">' + value + '</a>'
+                        }
+                      table.row.add([k, value]);
+                    }
+                    table.draw();
+                   };
+
+            
+// Reset form after agent becomes available again
+    connect.agent((agent) => {
+       agent.onStateChange((event) => {
+          if (event.newState === 'Available') {
+                  document.getElementById("contactDetails").reset();
+             //     $('#attributes').DataTable().clear().draw();
+                     }
+               });
+          });   
+
+      </script>
+         </div>
+      </section>
+      <section id="section-main">
+         <header>
+            <h1>Amazon Connect CCP Integration Demo</h1>
+            <p>Demonstrates the abilty to embed the Call Control Panel and pass data to a form</p>
+         </header>
+         <form name="contactDetails" id="contactDetails">
+         <fieldset>
+            <legend>Contact Details</legend>
+               <div>
+                  <label for="phoneNumber">Phone Number</label>
+                  <input name="phoneNumber" type="tel" id="phoneNumber"  placeholder="+15551112222" readonly>
+               </div>
+                <div>
+                  <table>
+                     <tbody>
+                        <tr>
+                          <td><label for="firstName" style="width: 128px;" >Full Name</label></td>
+                           <td><input name="firstName" type="text" id="firstName" placeholder="First Name" style='width:161px'></td>
+                           <td><input name="lastName" type="text" id="lastName" placeholder="Last Name" style='width:162px'></td>
+                           <td><button class="btn" type="button" id="updateName"><img class="clippy" src="../assets/sync.svg" width="17" alt="Copy to clipboard"> </td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+               <div>
+                  <table>
+                     <tbody>
+                        <tr>
+                           <td><label for="contactID" style="width: 128px;" >Contact ID</label></td>
+                           <td><input name="contactID" type="text" id="contactID" placeholder="Contact ID" style='width: 340px' readonly></td>
+                           <td><button class="btn" type="button" id="btn" data-clipboard-demo data-clipboard-target="#contactID"><img class="clippy" src="../assets/clippy.svg" width="17" alt="Copy to clipboard"></td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+            <div>
+               <div id="hiddenAttributes">
+                  <input type=button id="showAttributes" value="Show Contact Attributes"></input>
+               </div>
+               <div id="visibleAttributes" style="display:none;">
+                  <input type=button id="hideAttributes" value="Hide Contact Attributes"></input>
+                  <table id="attributes" style="width:100%;border=1px" />
+               </div>
+            </div>
+         </fieldset>
+         </form>
+      </section>
+   <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96261456-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+   </body>
+</script>
+</html>
+
+
+

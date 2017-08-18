@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Amazon Connect Demo Site</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta content="utf-8" http-equiv="encoding">
+    <link href="../css/style.css" rel="stylesheet" type="text/css" />
+    <link href="../css/copybutton.css" rel="stylesheet" type="text/css" />
+    <link href="../css/menuStyle.css" rel="stylesheet" type="text/css" />
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script type="text/javascript" src="../js/amazon-connect-v1.1.1.js"></script>
+    <script src="../js/clipboard.min.js"></script>
+    <script src="../js/demo-common.js"></script>
+    <script src="../js/menu.js"></script>
+    <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+   <!--navbar div with the id-->
+    <div id="navbar-frame"></div>
+   <script>
+      var clipboard = new Clipboard('.btn');
+      clipboard.on('success', function(e) {
+      console.log(e);
+          });
+
+      clipboard.on('error', function(e) {
+      console.log(e);
+          });
+   </script>
+   <style>
+      #ccpContainer {
+         width:265px;
+         height:465px;
+         overflow:hidden;
+         float:left;
+         margin-left:22px;
+         padding:25px;
+      }
+      #section-main {
+         padding:10px;
+         max-width:600px;
+         height:495px;
+         margin-left:0px;
+         float:left;
+         overflow: hidden;
+      }
+     #attributes_wrapper {
+         width: 550px;
+         height: 175px;
+         overflow-y: scroll;
+         overflow-x:hidden;
+      }
+   </style>
+<section id="ccpContainer">
+ <div id="ccpContainer1">
+     <script> 
+    //Connect CCP Integration
+               var container = document.getElementById("ccpContainer");
+               connect.core.initCCP(container, {
+                  ccpUrl: demo.ccpUrl,
+                  softphone: {
+                     allowFramedSoftphone: true,
+                     disableRingtone: false
+                     }
+                  });
+  var c; connect.contact(function(contact) {
+          c = contact;
+          c.onConnecting(function(c) {
+        var attr = c.getAttributes();
+        var c1 = c.getConnections()[1];
+        var c2 = c.getStatus();
+                document.getElementById("contactID").value=c.contactId;
+                document.getElementById("timeStamp").value=c2.timestamp;
+                document.getElementById("phoneNumber").value=c1.getAddress()['phoneNumber'];
+                });
+	 c.onConnected(function(c) {
+        var attr = c.getAttributes();
+        window.open(attr['screenpopUrl'].value, 'newwindow');              
+        });
+
+
+    });
+
+   // Reset form after agent becomes available again
+    connect.agent((agent) => {
+       agent.onStateChange((event) => { 
+          if (event.newState === 'Available') {
+                  document.getElementById("contactDetails").reset();
+                  hideExtras();
+                     }
+               });
+          });
+
+
+
+        </script>
+
+
+     </div>
+
+
+</section>
+
+<section id="section-main">
+
+                <header>
+			<h1>Amazon Connect Integration Demo - Screen Pop</h1>
+                        <p>Demonstrates the abilty to embed the Call Control Panel, pass data to a form while connecting, then perform a screenpop after connection</p>
+
+                </header>
+
+
+                <mark id="message"></mark>
+
+<form name="contactDetails" id="contactDetails">
+
+            <fieldset>
+		<legend>Contact Details</legend>
+		  <div>
+                    <label for="phoneNumber">Phone Number</label>
+                    <input name="phoneNumber" type="tel" id="phoneNumber"  placeholder="+15551112222" readonly>
+                  </div>
+                  <div>
+                    <label for="timeStamp">Time Stamp</label>
+                    <input name="timeStamp" type="text" id="timeStamp" placeholder="Time Stamp" readonly>
+                  </div>
+		  <div>
+                    <label for="contactID">Contact ID</label>
+                    <input name="contactID" type="text" id="contactID" placeholder="Contact ID" style='width: 340px' readonly>
+                    <button class="btn" type="button" id="btn" data-clipboard-demo data-clipboard-target="#contactID">
+                    <img class="clippy" src="../assets/clippy.svg" width="17" alt="Copy to clipboard">
+                  </div>
+             </fieldset>
+
+</form>
+</section>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-96261456-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+</body>
+</html>
+

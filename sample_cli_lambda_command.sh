@@ -1,0 +1,1 @@
+aws lambda add-permission --region us-east-1  --function-name function:InnowizLambdaConnect --statement-id 1 --principal connect.amazonaws.com --action lambda:InvokeFunction --source-account 906933862968
